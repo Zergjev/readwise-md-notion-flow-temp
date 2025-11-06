@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "readwise-notion-sync"
+version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = ["pydantic>=2", "typer>=0.12", "requests>=2"]
+
+[project.scripts]
+rn = "readwise_notion_sync.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# -------------------- Tooling (added) --------------------
+
+[project.optional-dependencies]
+dev = [
+  "pre-commit>=3.7",
+  "black==24.10.0",
+  "isort==5.13.2",
+  "flake8==7.1.1",
+  "flake8-bugbear==24.8.19",
+  "flake8-docstrings==1.7.0",
+  "flake8-comprehensions==3.14.0",
+  "codespell==2.3.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+# Flake8 7+ reads config from pyproject via [tool.flake8]
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+docstring-convention = "google"
+exclude = [".git", "__pycache__", "build", "dist"]

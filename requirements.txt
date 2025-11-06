@@ -1,0 +1,31 @@
+requests
+
+# google authentication for google drive
+
+google-api-python-client
+google-auth
+google-auth-httplib2
+google-auth-oauthlib
+
+# for Poller-Fetcher
+
+google-api-python-client==2.149.0
+google-auth==2.35.0
+google-auth-httplib2==0.2.0
+python-dateutil==2.9.0.post0
+pydantic==2.9.2
+
+# for Transcriber
+
+faster-whisper==1.0.3
+soundfile==0.12.1
+numpy>=1.26
+
+# for OpenAI SDK
+
+openai>=1.11.0
+
+# for Notion Writer
+
+notion-client==2.2.1
+python-dotenv==1.0.1

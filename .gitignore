@@ -1,0 +1,11 @@
+# Ignore environment files (contains secrets)
+.env
+.env.*
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Downloaded data
+downloads/
+
