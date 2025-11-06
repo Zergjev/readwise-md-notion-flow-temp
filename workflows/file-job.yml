@@ -1,0 +1,40 @@
+name: File Job (Fetcher)
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        required: true
+        type: string
+    secrets:
+      GOOGLE_SERVICE_JSON:
+        required: true
+      DRIVE_FOLDER_ID:
+        required: false
+
+jobs:
+  fetch_files:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(inputs.files) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Download one file (Fetcher)
+        env:
+          GOOGLE_SERVICE_JSON: ${{ secrets.GOOGLE_SERVICE_JSON }}
+          AUDIO_OUTPUT_DIR: downloads/audio
+          MATRIX_FILE: ${{ toJson(matrix.file) }}
+        run: |
+          python -m agents.voice2notion.apps.fetcher.run
+      - name: List outputs
+        run: |
+          ls -lah downloads || true
+          ls -lah downloads/audio || true
