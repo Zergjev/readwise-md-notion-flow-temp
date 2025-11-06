@@ -1,0 +1,53 @@
+name: Google Drive access - smoke test
+on:
+  workflow_dispatch:      # 👈 allows you to run it manually from the Actions tab
+  push:
+    branches: [ Main_2 ]  # optional — runs when you push to Main_2
+    paths:
+      - .github/workflows/drive-access-smoke.yml
+  
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_JSON: ${{ secrets.GOOGLE_SERVICE_JSON }}
+      DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+
+      - name: Test Google Drive connection
+        run: |
+          python - <<'PY'
+          import os, json, base64
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          folder_id = os.environ["DRIVE_FOLDER_ID"]
+          svc = os.environ["GOOGLE_SERVICE_JSON"]
+
+          print("🔹 Authenticating to Google Drive...")
+          try:
+              data = json.loads(svc) if svc.strip().startswith("{") else json.loads(base64.b64decode(svc))
+              creds = service_account.Credentials.from_service_account_info(data, scopes=["https://www.googleapis.com/auth/drive.readonly"])
+              drive = build("drive", "v3", credentials=creds)
+              print("✅ Connected to Google Drive successfully!")
+
+              query = f"'{folder_id}' in parents and trashed=false"
+              res = drive.files().list(q=query, fields="files(id,name)").execute()
+              files = res.get("files", [])
+              print(f"📂 Found {len(files)} file(s) in folder {folder_id}:")
+              for f in files:
+                  print(f"   - {f['name']} (ID: {f['id']})")
+          except Exception as e:
+              print(f"❌ Error: {e}")
+              exit(1)
+          PY
