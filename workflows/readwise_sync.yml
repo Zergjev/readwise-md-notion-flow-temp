@@ -1,0 +1,49 @@
+name: Readwise → Markdown → Notion
+
+on:
+  schedule:
+    # Runs daily at 05:05 UTC (≈02:05 America/Santiago, UTC-3)
+    - cron: "05 05 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # needed to commit the generated Markdown files
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Readwise → Markdown → Notion sync
+        env:
+          READWISE_TOKEN:       ${{ secrets.READWISE_TOKEN }}
+          NOTION_TOKEN:         ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID:   ${{ secrets.NOTION_DATABASE_ID }}  # main HIGHLIGHTS DB
+          CATALOG_DB_ID:        ${{ secrets.CATALOG_DB_ID }}       # catalog DB
+          ALT_DB_ID:            ${{ secrets.ALT_DB_ID }}           # optional alt HIGHLIGHTS DB
+          RW_UPDATED_AFTER:     ${{ secrets.RW_UPDATED_AFTER }}    # optional
+          NOTION_VERSION:       2022-06-28
+        run: |
+          python main.py | tee sync.log
+          # capture a timestamp (optional helper file)
+          grep SYNC_COMPLETE_AT sync.log | sed 's/^SYNC_COMPLETE_AT=//' > .last_sync_at || true
+
+      - name: Commit Markdown exports (if any)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add exports .last_sync_at || true
+          git commit -m "chore: update exports $(date -u '+%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+          git push
+
