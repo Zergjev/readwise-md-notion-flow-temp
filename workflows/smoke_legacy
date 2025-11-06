@@ -1,0 +1,25 @@
+name: Smoke (legacy main.py via rn)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run_legacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e .
+      - name: Run legacy path
+        env:
+          READWISE_TOKEN: ${{ secrets.READWISE_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          MAIN_DB_ID: ${{ secrets.MAIN_DB_ID }}
+          ALT_DB_ID: ${{ secrets.ALT_DB_ID }}
+          CATALOG_DB_ID: ${{ secrets.CATALOG_DB_ID }}
+        run: rn run-legacy
+        # If rn is not found, uncomment this line instead:
+        # run: python -m readwise_notion_sync.cli run-legacy
